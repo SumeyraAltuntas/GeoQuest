@@ -3,7 +3,7 @@ import { MOUNTAINS } from '../data/mountains';
 import { RIVERS } from '../data/rivers';
 import { shuffle } from './helpers';
 
-import type { Country } from '../data/countries';
+import type { CountryCapital } from '../data/countries';
 import type { Mountain } from '../data/mountains';
 import type { River } from '../data/rivers';
 
@@ -14,28 +14,54 @@ export interface Question {
   fact: string;
 }
 
+/** Pick N items from pool whose displayValue is unique and different from correctValue */
+function pickUniqueOthers<T>(
+  pool: T[],
+  correctValue: string,
+  displayFn: (item: T) => string,
+  count: number,
+): T[] {
+  const seen = new Set<string>([correctValue]);
+  const result: T[] = [];
+  const shuffled = shuffle(pool);
+  for (const item of shuffled) {
+    const val = displayFn(item);
+    if (!seen.has(val)) {
+      seen.add(val);
+      result.push(item);
+      if (result.length === count) break;
+    }
+  }
+  return result;
+}
+
 export function genCapitalQ(continent: string = 'All'): Question | null {
-  const pool: Country[] =
+  const pool: CountryCapital[] =
     continent === 'All'
       ? COUNTRIES_CAPITALS
       : COUNTRIES_CAPITALS.filter(c => c.continent === continent);
 
   if (pool.length < 4) return null;
 
-  const types = ['capitalOfCountry', 'countryOfCapital', 'flagOfCountry', 'countryOfFlag'] as const;
+  const types = ['capitalOfCountry', 'countryOfCapital'] as const;
   const type = types[Math.floor(Math.random() * types.length)];
   const correct = pool[Math.floor(Math.random() * pool.length)];
-  const others = shuffle(pool.filter(c => c.country !== correct.country)).slice(0, 3);
 
-  if (others.length < 3) return genCapitalQ(continent);
-
-  const optionValue = (c: Country): string => {
+  const optionValue = (c: CountryCapital): string => {
     switch (type) {
       case 'capitalOfCountry': return c.capital;
-      case 'flagOfCountry': return c.flag;
       default: return c.country;
     }
   };
+
+  const others = pickUniqueOthers(
+    pool.filter(c => c.country !== correct.country),
+    optionValue(correct),
+    optionValue,
+    3,
+  );
+
+  if (others.length < 3) return genCapitalQ(continent);
 
   const options = shuffle([optionValue(correct), ...others.map(o => optionValue(o))]);
 
@@ -43,27 +69,46 @@ export function genCapitalQ(continent: string = 'All'): Question | null {
     capitalOfCountry: {
       q: `What is the capital of ${correct.country}?`,
       ans: correct.capital,
-      fact: `${correct.capital} is the capital of ${correct.country} ${correct.flag}`,
+      fact: correct.fact,
     },
     countryOfCapital: {
       q: `${correct.capital} is the capital of?`,
       ans: correct.country,
-      fact: `${correct.capital} is the capital of ${correct.country} ${correct.flag}`,
-    },
-    flagOfCountry: {
-      q: `Which flag belongs to ${correct.country}?`,
-      ans: correct.flag,
-      fact: `${correct.flag} is the flag of ${correct.country}`,
-    },
-    countryOfFlag: {
-      q: `Which country has this flag? ${correct.flag}`,
-      ans: correct.country,
-      fact: `${correct.flag} is the flag of ${correct.country}`,
+      fact: correct.fact,
     },
   };
 
   const m = qMap[type];
   return { question: m.q, options, answer: m.ans, fact: m.fact };
+}
+
+export function genFlagQ(continent: string = 'All'): Question | null {
+  const pool: CountryCapital[] =
+    continent === 'All'
+      ? COUNTRIES_CAPITALS
+      : COUNTRIES_CAPITALS.filter(c => c.continent === continent);
+
+  if (pool.length < 4) return null;
+
+  const correct = pool[Math.floor(Math.random() * pool.length)];
+
+  const others = pickUniqueOthers(
+    pool.filter(c => c.country !== correct.country),
+    correct.country,
+    (c) => c.country,
+    3,
+  );
+
+  if (others.length < 3) return genFlagQ(continent);
+
+  const options = shuffle([correct.country, ...others.map(o => o.country)]);
+
+  return {
+    question: `Which country does this flag belong to? ${correct.flag}`,
+    options,
+    answer: correct.country,
+    fact: correct.fact,
+  };
 }
 
 export function genMountainQ(continent: string = 'All'): Question | null {
@@ -77,8 +122,18 @@ export function genMountainQ(continent: string = 'All'): Question | null {
   const types = ['countryOfMountain', 'heightOfMountain', 'rangeOfMountain', 'mountainOfFact'] as const;
   const type = types[Math.floor(Math.random() * types.length)];
   const correct = pool[Math.floor(Math.random() * pool.length)];
-  const others = shuffle(pool.filter(m => m.name !== correct.name)).slice(0, 3);
+  const rest = pool.filter(m => m.name !== correct.name);
 
+  const displayFn = (m: Mountain): string => {
+    switch (type) {
+      case 'countryOfMountain': return m.country;
+      case 'heightOfMountain': return m.height;
+      case 'rangeOfMountain': return m.range;
+      default: return m.name;
+    }
+  };
+
+  const others = pickUniqueOthers(rest, displayFn(correct), displayFn, 3);
   if (others.length < 3) return genMountainQ(continent);
 
   switch (type) {
@@ -126,8 +181,18 @@ export function genRiverQ(continent: string = 'All'): Question | null {
   const types = ['countryOfRiver', 'lengthOfRiver', 'cityOnRiver', 'riverOfFact'] as const;
   const type = types[Math.floor(Math.random() * types.length)];
   const correct = pool[Math.floor(Math.random() * pool.length)];
-  const others = shuffle(pool.filter(r => r.name !== correct.name)).slice(0, 3);
+  const rest = pool.filter(r => r.name !== correct.name);
 
+  const displayFn = (r: River): string => {
+    switch (type) {
+      case 'countryOfRiver': return r.country;
+      case 'lengthOfRiver': return r.length;
+      case 'cityOnRiver': return r.city;
+      default: return r.name;
+    }
+  };
+
+  const others = pickUniqueOthers(rest, displayFn(correct), displayFn, 3);
   if (others.length < 3) return genRiverQ(continent);
 
   switch (type) {
