@@ -37,10 +37,10 @@
     ],
     "extra": {
       "eas": {
-        "projectId": ""
+        "projectId": "101f1214-a737-4016-bee2-2e50d0b45fbf"
       }
     },
-    "owner": "",
+    "owner": "smyrltnts",
     "description": "Test your geography knowledge with fun quizzes about capitals, mountains, and rivers. Learn and explore the world!",
     "privacyPolicyUrl": "https://github.com/SumeyraAltuntas/GeoQuest/blob/master/privacy-policy.html"
   }
