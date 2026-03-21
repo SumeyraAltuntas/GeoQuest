@@ -41,6 +41,7 @@
       }
     },
     "owner": "",
-    "description": "Test your geography knowledge with fun quizzes about capitals, mountains, and rivers. Learn and explore the world!"
+    "description": "Test your geography knowledge with fun quizzes about capitals, mountains, and rivers. Learn and explore the world!",
+    "privacyPolicyUrl": "https://github.com/SumeyraAltuntas/GeoQuest/blob/master/privacy-policy.html"
   }
 }
