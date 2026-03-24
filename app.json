@@ -1,5 +1,6 @@
 {
   "expo": {
+<<<<<<< HEAD
     "name": "GeoQuest World",
     "slug": "GeoQuest",
     "version": "1.1.0",
@@ -7,6 +8,15 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
+=======
+    "name": "GeoQuest",
+    "slug": "GeoQuest",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+>>>>>>> 07b102b7d19821d8112f2ea966be985563fd8721
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -14,11 +24,18 @@
     },
     "ios": {
       "supportsTablet": true,
+<<<<<<< HEAD
       "bundleIdentifier": "com.smyrltnts.geoquest",
       "buildNumber": "2",
       "infoPlist": {
         "CFBundleDisplayName": "GeoQuest",
         "ITSAppUsesNonExemptEncryption": false
+=======
+      "bundleIdentifier": "com.geoquest.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "CFBundleDisplayName": "GeoQuest"
+>>>>>>> 07b102b7d19821d8112f2ea966be985563fd8721
       }
     },
     "android": {
@@ -26,18 +43,24 @@
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#1a6b6a"
       },
+<<<<<<< HEAD
       "package": "com.smyrltnts.geoquest",
       "versionCode": 1,
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ]
+=======
+      "package": "com.geoquest.app",
+      "versionCode": 1
+>>>>>>> 07b102b7d19821d8112f2ea966be985563fd8721
     },
     "web": {
       "favicon": "./assets/icon.png"
     },
     "plugins": [
       "expo-font",
+<<<<<<< HEAD
       "expo-asset",
       "expo-av",
       [
@@ -48,6 +71,9 @@
           "backgroundColor": "#1a6b6a"
         }
       ]
+=======
+      "expo-asset"
+>>>>>>> 07b102b7d19821d8112f2ea966be985563fd8721
     ],
     "extra": {
       "eas": {
