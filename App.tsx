@@ -184,13 +184,10 @@ export default function App() {
       cards = shuffle(pool).slice(0, 20).map(r => ({
         id: r.name, front: r.name, back: `${r.length}\n${r.country}`, detail: r.fact
       }));
-<<<<<<< HEAD
     } else if (lesson === 'flags') {
       cards = shuffle(filterCont(COUNTRIES_CAPITALS)).slice(0, 20).map(c => ({
         id: c.country, front: c.flag, back: c.country, detail: `Continent: ${c.continent}`
       }));
-=======
->>>>>>> 07b102b7d19821d8112f2ea966be985563fd8721
     }
     setLearnCards(cards);
     setLearnIdx(0);
