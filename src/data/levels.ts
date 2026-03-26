@@ -37,6 +37,6 @@ export const CONTINENT_ICONS: Record<string, string> = {
 
 export const DIFFICULTIES: Record<string, Difficulty> = {
   easy: { label: "Easy", choices: 4, icon: "😊", xpMult: 1 },
-  medium: { label: "Medium", choices: 6, icon: "🤔", xpMult: 1.5 },
-  hard: { label: "Hard", choices: 0, icon: "🤯", xpMult: 2.5 },
+  medium: { label: "Medium", choices: 5, icon: "🤔", xpMult: 1.5 },
+  hard: { label: "Hard", choices: 6, icon: "🤯", xpMult: 2.5 },
 };

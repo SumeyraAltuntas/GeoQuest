@@ -4,5 +4,7 @@ export { MOUNTAINS } from './mountains';
 export type { Mountain } from './mountains';
 export { RIVERS } from './rivers';
 export type { River } from './rivers';
+export { LAKES } from './lakes';
+export type { Lake } from './lakes';
 export { LEVELS, CONTINENTS, CONTINENT_ICONS, DIFFICULTIES } from './levels';
 export type { Level, Difficulty, Continent } from './levels';

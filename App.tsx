@@ -6,9 +6,10 @@ import { Audio } from 'expo-av';
 import { COUNTRIES_CAPITALS } from './src/data/countries';
 import { MOUNTAINS } from './src/data/mountains';
 import { RIVERS } from './src/data/rivers';
+import { LAKES } from './src/data/lakes';
 import { LEVELS, CONTINENTS, CONTINENT_ICONS, DIFFICULTIES } from './src/data/levels';
 import { shuffle, getLevel, getNextLevel, getLevelIndex, getDailySeed, seededRandom } from './src/utils/helpers';
-import { genCapitalQ, genFlagQ, genMountainQ, genRiverQ, Question } from './src/utils/questions';
+import { genCapitalQ, genFlagQ, genMountainQ, genRiverQ, genLakeQ, Question } from './src/utils/questions';
 import { loadGameState, saveValue } from './src/hooks/useStorage';
 
 const QUIZ_LENGTH = 10;
@@ -57,6 +58,7 @@ export default function App() {
   const [sessionScore, setSessionScore] = useState(0);
   const [sessionCorrect, setSessionCorrect] = useState(0);
   const [comboCount, setComboCount] = useState(0);
+  const [bestCombo, setBestCombo] = useState(0);
   const [learnedItems, setLearnedItems] = useState<string[]>([]);
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [newLevel, setNewLevel] = useState<any>(null);
@@ -138,22 +140,27 @@ export default function App() {
 
   const startQuiz = useCallback((lesson: string, continent: string, isDaily = false) => {
     let qs: (Question | null)[] = [];
+    const usedIds = new Set<string>();
+    const gen = (type: string) => {
+      let q: Question | null = null;
+      if (type === 'capitals') q = genCapitalQ(continent, usedIds, difficulty);
+      else if (type === 'flags') q = genFlagQ(continent, usedIds, difficulty);
+      else if (type === 'mountains') q = genMountainQ(continent, usedIds, difficulty);
+      else if (type === 'rivers') q = genRiverQ(continent, usedIds, difficulty);
+      else if (type === 'lakes') q = genLakeQ(continent, usedIds, difficulty);
+      if (q) usedIds.add(q.id);
+      return q;
+    };
     if (isDaily) {
       const rng = seededRandom(dailySeed);
-      const lessons = ['capitals', 'flags', 'mountains', 'rivers'];
+      const lessons = ['capitals', 'flags', 'mountains', 'rivers', 'lakes'];
       for (let i = 0; i < QUIZ_LENGTH; i++) {
         const l = lessons[Math.floor(rng() * lessons.length)];
-        if (l === 'capitals') qs.push(genCapitalQ(continent));
-        else if (l === 'flags') qs.push(genFlagQ(continent));
-        else if (l === 'mountains') qs.push(genMountainQ(continent));
-        else qs.push(genRiverQ(continent));
+        qs.push(gen(l));
       }
     } else {
       for (let i = 0; i < QUIZ_LENGTH; i++) {
-        if (lesson === 'capitals') qs.push(genCapitalQ(continent));
-        else if (lesson === 'flags') qs.push(genFlagQ(continent));
-        else if (lesson === 'mountains') qs.push(genMountainQ(continent));
-        else if (lesson === 'rivers') qs.push(genRiverQ(continent));
+        qs.push(gen(lesson));
       }
     }
     setQuestions(qs);
@@ -163,6 +170,7 @@ export default function App() {
     setSessionScore(0);
     setSessionCorrect(0);
     setComboCount(0);
+    setBestCombo(0);
     setHearts(5);
 
     setActiveLesson(isDaily ? 'daily' : lesson);
@@ -192,6 +200,11 @@ export default function App() {
       cards = shuffle(filterCont(COUNTRIES_CAPITALS)).slice(0, 20).map(c => ({
         id: c.country, front: c.flag, back: c.country, detail: `Continent: ${c.continent}`
       }));
+    } else if (lesson === 'lakes') {
+      const pool = filterCont(LAKES).length >= 4 ? filterCont(LAKES) : LAKES;
+      cards = shuffle(pool).slice(0, 20).map(l => ({
+        id: l.name, front: l.name, back: `${l.area}\n${l.country}`, detail: l.fact
+      }));
     }
     setLearnCards(cards);
     setLearnIdx(0);
@@ -216,6 +229,7 @@ export default function App() {
       triggerPop();
       const combo = comboCount + 1;
       setComboCount(combo);
+      setBestCombo(b => Math.max(b, combo));
       setTotalCorrect(p => p + 1);
       setSessionCorrect(p => p + 1);
       const base = 10 + (combo >= 3 ? combo * 3 : 0) + (combo >= 5 ? 5 : 0);
@@ -490,7 +504,7 @@ export default function App() {
                 >
                   <Text style={{ fontSize: 22 }}>{d.icon}</Text>
                   <Text style={[styles.diffLabel, { color: difficulty === key ? '#007AFF' : '#1C1C1E' }]}>{d.label}</Text>
-                  <Text style={styles.diffDetail}>{key === 'hard' ? 'Type answer' : `${d.choices} choices`}</Text>
+                  <Text style={styles.diffDetail}>{`${d.choices} choices`}</Text>
                   <Text style={styles.diffXP}>{d.xpMult}x XP</Text>
                 </TouchableOpacity>
               ))}
@@ -528,6 +542,7 @@ export default function App() {
               { id: 'flags', icon: '🏁', title: 'Flags', desc: `${COUNTRIES_CAPITALS.length} flags to identify` },
               { id: 'mountains', icon: '⛰️', title: 'Mountains', desc: `${MOUNTAINS.length} peaks to conquer` },
               { id: 'rivers', icon: '🌊', title: 'Rivers', desc: `${RIVERS.length} rivers to explore` },
+              { id: 'lakes', icon: '💧', title: 'Lakes', desc: `${LAKES.length} lakes to discover` },
             ].map((lesson, i, arr) => (
               <View key={lesson.id} style={{ borderBottomWidth: i < arr.length - 1 ? 1 : 0, borderBottomColor: '#F2F2F7' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, paddingHorizontal: 18 }}>
@@ -559,7 +574,7 @@ export default function App() {
     const q = questions[currentQ];
     if (!q) return null;
     const progress = ((currentQ + (showResult ? 1 : 0)) / QUIZ_LENGTH) * 100;
-    const catColors: Record<string, string> = { capitals: '#22943F', flags: '#E91E63', mountains: '#FF9500', rivers: '#007AFF', daily: '#AF52DE' };
+    const catColors: Record<string, string> = { capitals: '#22943F', flags: '#E91E63', mountains: '#FF9500', rivers: '#007AFF', lakes: '#00BCD4', daily: '#AF52DE' };
     const catColor = catColors[activeLesson] || '#22943F';
 
     return (
@@ -657,7 +672,7 @@ export default function App() {
   if (screen === 'results') {
     const pct = Math.round((sessionCorrect / QUIZ_LENGTH) * 100);
     const stars = pct >= 90 ? 3 : pct >= 60 ? 2 : pct >= 30 ? 1 : 0;
-    const catLabels: Record<string, string> = { capitals: 'Capitals', flags: 'Flags', mountains: 'Mountains', rivers: 'Rivers', daily: 'Daily' };
+    const catLabels: Record<string, string> = { capitals: 'Capitals', flags: 'Flags', mountains: 'Mountains', rivers: 'Rivers', lakes: 'Lakes', daily: 'Daily' };
 
     return (
       <SafeAreaView style={styles.container}>
@@ -684,7 +699,7 @@ export default function App() {
             {[
               { i: '✅', l: 'Correct', v: `${sessionCorrect}/${QUIZ_LENGTH}` },
               { i: '⚡', l: 'XP Earned', v: `${sessionScore}` },
-              { i: '🔥', l: 'Best Combo', v: `${comboCount}x` },
+              { i: '🔥', l: 'Best Combo', v: `${bestCombo}x` },
               { i: '📊', l: 'Accuracy', v: `${pct}%` }
             ].map((s, idx) => (
               <View key={idx} style={styles.resultStatCard}>
