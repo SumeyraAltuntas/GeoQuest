@@ -71,6 +71,7 @@ export default function App() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const initialized = useRef(false);
 
 
   const xpMult = DIFFICULTIES[difficulty].xpMult;
@@ -108,24 +109,27 @@ export default function App() {
       setTotalCorrect(s.totalCorrect);
       setTotalAnswered(s.totalAnswered);
       setLearnedItems(s.learnedItems);
-      setDailyCompleted(s.dailyCompleted);
+      const todaysSeed = getDailySeed();
+      const isToday = s.dailyDate === todaysSeed;
+      setDailyCompleted(isToday ? s.dailyCompleted : false);
       setDifficulty(s.difficulty);
       setSelectedContinent(s.selectedContinent);
+      initialized.current = true;
       setIsLoading(false);
       fadeIn();
     });
   }, []);
 
-  // Save state when values change
-  useEffect(() => { saveValue('XP', xp); }, [xp]);
-  useEffect(() => { saveValue('STREAK', streak); }, [streak]);
-  useEffect(() => { saveValue('BEST_STREAK', bestStreak); }, [bestStreak]);
-  useEffect(() => { saveValue('TOTAL_CORRECT', totalCorrect); }, [totalCorrect]);
-  useEffect(() => { saveValue('TOTAL_ANSWERED', totalAnswered); }, [totalAnswered]);
-  useEffect(() => { saveValue('LEARNED_ITEMS', learnedItems); }, [learnedItems]);
-  useEffect(() => { saveValue('DAILY_COMPLETED', dailyCompleted); }, [dailyCompleted]);
-  useEffect(() => { saveValue('DIFFICULTY', difficulty); }, [difficulty]);
-  useEffect(() => { saveValue('CONTINENT', selectedContinent); }, [selectedContinent]);
+  // Save state when values change (guarded: only after initial load to prevent overwriting saved data on startup)
+  useEffect(() => { if (initialized.current) saveValue('XP', xp); }, [xp]);
+  useEffect(() => { if (initialized.current) saveValue('STREAK', streak); }, [streak]);
+  useEffect(() => { if (initialized.current) saveValue('BEST_STREAK', bestStreak); }, [bestStreak]);
+  useEffect(() => { if (initialized.current) saveValue('TOTAL_CORRECT', totalCorrect); }, [totalCorrect]);
+  useEffect(() => { if (initialized.current) saveValue('TOTAL_ANSWERED', totalAnswered); }, [totalAnswered]);
+  useEffect(() => { if (initialized.current) saveValue('LEARNED_ITEMS', learnedItems); }, [learnedItems]);
+  useEffect(() => { if (initialized.current) saveValue('DAILY_COMPLETED', dailyCompleted); }, [dailyCompleted]);
+  useEffect(() => { if (initialized.current) saveValue('DIFFICULTY', difficulty); }, [difficulty]);
+  useEffect(() => { if (initialized.current) saveValue('CONTINENT', selectedContinent); }, [selectedContinent]);
 
   const level = getLevel(xp);
   const nextLvl = getNextLevel(xp);
@@ -244,7 +248,10 @@ export default function App() {
   const nextQuestion = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (hearts <= 0 || currentQ >= QUIZ_LENGTH - 1) {
-      if (activeLesson === 'daily') setDailyCompleted(true);
+      if (activeLesson === 'daily') {
+        setDailyCompleted(true);
+        saveValue('DAILY_DATE', getDailySeed());
+      }
       setScreen('results');
       fadeIn();
       return;
