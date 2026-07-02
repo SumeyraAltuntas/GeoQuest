@@ -13,6 +13,24 @@ const KEYS = {
   CONTINENT: 'geoquest_continent',
 };
 
+const VALID_DIFFICULTIES = ['easy', 'medium', 'hard'];
+
+/** Parse a stored int defensively — corrupted values become the fallback, never NaN. */
+function toInt(raw: string | null, fallback = 0): number {
+  const n = parseInt(raw ?? '', 10);
+  return Number.isFinite(n) && n >= 0 ? n : fallback;
+}
+
+function toStringArray(raw: string | null): string[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
 export interface SavedState {
   xp: number;
   streak: number;
@@ -32,16 +50,19 @@ export async function loadGameState(): Promise<SavedState> {
       KEYS.XP, KEYS.STREAK, KEYS.BEST_STREAK, KEYS.TOTAL_CORRECT, KEYS.TOTAL_ANSWERED,
       KEYS.LEARNED_ITEMS, KEYS.DAILY_COMPLETED, KEYS.DAILY_DATE, KEYS.DIFFICULTY, KEYS.CONTINENT,
     ]);
+    const storedDifficulty = difficulty[1] || 'easy';
     return {
-      xp: parseInt(xp[1] || '0', 10),
-      streak: parseInt(streak[1] || '0', 10),
-      bestStreak: parseInt(bestStreak[1] || '0', 10),
-      totalCorrect: parseInt(totalCorrect[1] || '0', 10),
-      totalAnswered: parseInt(totalAnswered[1] || '0', 10),
-      learnedItems: learnedItems[1] ? JSON.parse(learnedItems[1]) : [],
+      xp: toInt(xp[1]),
+      streak: toInt(streak[1]),
+      bestStreak: toInt(bestStreak[1]),
+      totalCorrect: toInt(totalCorrect[1]),
+      totalAnswered: toInt(totalAnswered[1]),
+      learnedItems: toStringArray(learnedItems[1]),
       dailyCompleted: dailyCompleted[1] === 'true',
       dailyDate: dailyDate[1] || '',
-      difficulty: difficulty[1] || 'easy',
+      // Validate instead of trusting storage — an unknown value would crash
+      // DIFFICULTIES[difficulty] lookups downstream.
+      difficulty: VALID_DIFFICULTIES.includes(storedDifficulty) ? storedDifficulty : 'easy',
       selectedContinent: continent[1] || 'All',
     };
   } catch {
