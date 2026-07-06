@@ -277,11 +277,8 @@ const lakeConfig: GeneratorConfig<Lake> = {
       prompt: l => `What is the area of ${l.name}?`,
       fact: l => l.fact,
     },
-    {
-      display: l => l.type,
-      prompt: l => `${l.name} is a __ lake?`,
-      fact: l => l.fact,
-    },
+    // Note: no `type` variant — lakes have only two types (Freshwater/Saltwater),
+    // which can't produce enough wrong answers for a full multiple-choice question.
     {
       display: l => l.name,
       prompt: l => `Which lake: "${l.fact}"?`,

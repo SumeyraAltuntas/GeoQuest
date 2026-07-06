@@ -337,7 +337,9 @@ function GeoQuestApp() {
             xp={xp}
             level={level}
             activeLesson={activeLesson}
-            onPlayAgain={() => startQuiz(activeLesson === 'daily' ? 'capitals' : activeLesson)}
+            onPlayAgain={() =>
+              activeLesson === 'daily' ? startQuiz('capitals', true) : startQuiz(activeLesson)
+            }
             onHome={goHome}
           />
           {levelUpModal}
